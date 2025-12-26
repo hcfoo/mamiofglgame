@@ -48,6 +48,19 @@ function clamp(n: number, a: number, b: number) {
   return Math.max(a, Math.min(b, n));
 }
 
+
+function shortName(full: string) {
+  // Prefer first name, fallback to trimmed label
+  const first = full.trim().split(/\s+/)[0] || full;
+  if (first.length <= 12) return first;
+  return first.slice(0, 11) + "…";
+}
+
+function ellipsis(s: string, max: number) {
+  if (s.length <= max) return s;
+  return s.slice(0, Math.max(0, max - 1)) + "…";
+}
+
 function getTone(): Tone {
   if (typeof window === "undefined") return "cute";
   const v = window.localStorage.getItem("mamiTone");
@@ -188,8 +201,8 @@ export default function PlayPage() {
     if (actresses.length === 0) return;
 
     const spawn = () => {
-      const baseSpeed = mode === "timed" ? 260 : 220;
-      const speed = baseSpeed + Math.random() * 160;
+      const baseSpeed = mode === "timed" ? 140 : 120;
+      const speed = baseSpeed + Math.random() * 80;
       const pick = actresses[Math.floor(Math.random() * actresses.length)];
 
       setFalling((cur) => {
@@ -201,13 +214,15 @@ export default function PlayPage() {
           speedPxPerSec: speed,
           bornAt: Date.now()
         };
-        // Keep list small
-        const trimmed = cur.slice(-5);
+        // Keep list small and do not overcrowd the runway
+        const MAX_FALLING = 3;
+        if (cur.length >= MAX_FALLING) return cur;
+        const trimmed = cur.slice(-MAX_FALLING);
         return [...trimmed, next];
       });
     };
 
-    const ms = mode === "timed" ? 900 : 1100;
+    const ms = mode === "timed" ? 1400 : 1600;
     const id = window.setInterval(spawn, ms);
     spawn();
 
@@ -332,11 +347,11 @@ export default function PlayPage() {
             key={f.id}
             className="falling"
             style={{ left: `${f.xPct}%`, transform: `translate(-50%, ${f.yPx}px)` }}
-            aria-label={`${f.actress.name} ${f.actress.starSign}`}
+            aria-label={`${shortName(f.actress.name)} ${f.actress.starSign}`}
           >
             <div className="tagTop">
               <span className="star" aria-hidden="true">★</span>
-              <span className="name">{f.actress.name}</span>
+              <span className="name" title={f.actress.name}>{shortName(f.actress.name)}</span>
             </div>
             <div className="tagBottom">
               <span className="sign">{f.actress.starSign}</span>
@@ -371,10 +386,10 @@ export default function PlayPage() {
         <Link href="/" className="ghost">Exit</Link>
       </section>
 
-      <nav className="bottomNav" aria-label="Bottom navigation">
-        <Link className="navItem" href="/">Home</Link>
-        <Link className="navItem navActive" href="/play">Play</Link>
-        <Link className="navItem" href="/collection">Cards</Link>
+      <nav className="navBar" aria-label="Bottom navigation">
+        <Link className="navLink" href="/">Home</Link>
+        <Link className="navLink navLinkActive" href="/play">Play</Link>
+        <Link className="navLink" href="/collection">Cards</Link>
       </nav>
 
       <style jsx>{`
@@ -464,7 +479,7 @@ export default function PlayPage() {
           background: rgba(255, 255, 255, 0.78);
           border: 1px solid rgba(0, 0, 0, 0.1);
           box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
-          padding: 10px 12px;
+          padding: 9px 10px;
           will-change: transform;
         }
 
@@ -482,6 +497,10 @@ export default function PlayPage() {
         .name {
           font-size: 13px;
           line-height: 1.15;
+          max-width: 190px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         .tagBottom {
@@ -606,7 +625,7 @@ export default function PlayPage() {
           display: grid;
           grid-template-columns: 1fr 1fr 1fr;
           gap: 6px;
-          padding: 10px 12px;
+          padding: 9px 10px;
           background: rgba(250, 247, 241, 0.92);
           backdrop-filter: blur(10px);
           border-top: 1px solid rgba(0, 0, 0, 0.08);

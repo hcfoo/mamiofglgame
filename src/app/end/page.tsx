@@ -111,14 +111,14 @@ export default function EndPage() {
         </button>
       </section>
 
-      <nav className="bottomNav" aria-label="Bottom navigation">
-        <Link className="navItem" href="/">
+      <nav className="navBar" aria-label="Bottom navigation">
+        <Link className="navLink" href="/">
           Home
         </Link>
-        <Link className="navItem" href="/play">
+        <Link className="navLink" href="/play">
           Play
         </Link>
-        <Link className="navItem" href="/collection">
+        <Link className="navLink" href="/collection">
           Cards
         </Link>
       </nav>
@@ -306,7 +306,9 @@ export default function EndPage() {
             border-top-right-radius: 18px;
           }
         }
-      `}</style>
+      
+        .endSonya{width: min(280px,70vw); height:auto; display:block; margin: 8px auto 0; filter: drop-shadow(0 18px 34px rgba(0,0,0,0.14));}
+`}</style>
     </main>
   );
 }

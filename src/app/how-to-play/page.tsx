@@ -70,14 +70,14 @@ export default function HowToPlayPage() {
         </Link>
       </section>
 
-      <nav className="bottomNav" aria-label="Bottom navigation">
-        <Link className="navItem" href="/">
+      <nav className="navBar" aria-label="Bottom navigation">
+        <Link className="navLink" href="/">
           Home
         </Link>
-        <Link className="navItem navActive" href="/how-to-play">
+        <Link className="navLink navLinkActive" href="/how-to-play">
           Play
         </Link>
-        <Link className="navItem" href="/collection">
+        <Link className="navLink" href="/collection">
           Cards
         </Link>
       </nav>

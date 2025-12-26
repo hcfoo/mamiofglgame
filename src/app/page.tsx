@@ -58,7 +58,8 @@ export default function HomePage() {
         <div className="heroCard">
           <div className="sonyaFrame" aria-label="Sonya illustration placeholder">
             <div className="sonyaPlaceholder">
-              <div className="sonyaText">Sonya</div>
+              <Image src="/characters/sonya.png" alt="Sonya chibi" width={340} height={340} className="sonyaArt" priority />
+              <div className="sonyaText" aria-hidden="true">Sonya</div>
               <div className="sonyaHint">Add your illustration later</div>
             </div>
           </div>
@@ -110,14 +111,14 @@ export default function HomePage() {
         <p className="tip">Tip: Lookmhee appears as a partner bonus</p>
       </section>
 
-      <nav className="bottomNav" aria-label="Bottom navigation">
-        <Link className="navItem navActive" href="/">
+      <nav className="navBar" aria-label="Bottom navigation">
+        <Link className="navLink navLinkActive" href="/">
           Home
         </Link>
-        <Link className="navItem" href="/play">
+        <Link className="navLink" href="/play">
           Play
         </Link>
-        <Link className="navItem" href="/collection">
+        <Link className="navLink" href="/collection">
           Cards
         </Link>
       </nav>
@@ -387,7 +388,43 @@ export default function HomePage() {
             border-top-right-radius: 18px;
           }
         }
-      `}</style>
+      
+        .ctaStack {
+          margin-top: 14px;
+          display: grid;
+          gap: 10px;
+        }
+
+        .cta {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          height: 46px;
+          border-radius: 14px;
+          font-weight: 900;
+          text-decoration: none;
+          border: 1px solid rgba(0, 0, 0, 0.10);
+          background: rgba(255, 255, 255, 0.72);
+          box-shadow: 0 18px 40px rgba(0, 0, 0, 0.10);
+          backdrop-filter: blur(10px);
+        }
+
+        .cta.primary {
+          background: linear-gradient(180deg, rgba(212, 175, 55, 0.70), rgba(180, 134, 35, 0.70));
+          color: #1b1206;
+          border-color: rgba(0,0,0,0.12);
+        }
+
+        .sonyaArt {
+          width: min(320px, 72vw);
+          height: auto;
+          display: block;
+          margin: 0 auto;
+          filter: drop-shadow(0 18px 34px rgba(0,0,0,0.14));
+          transform: translateY(6px);
+        }
+
+`}</style>
     </main>
   );
 }

@@ -224,14 +224,14 @@ export default function CollectionPage() {
         </div>
       ) : null}
 
-      <nav className="bottomNav" aria-label="Bottom navigation">
-        <Link className="navItem" href="/">
+      <nav className="navBar" aria-label="Bottom navigation">
+        <Link className="navLink" href="/">
           Home
         </Link>
-        <Link className="navItem" href="/play">
+        <Link className="navLink" href="/play">
           Play
         </Link>
-        <Link className="navItem navActive" href="/collection">
+        <Link className="navLink navLinkActive" href="/collection">
           Cards
         </Link>
       </nav>
