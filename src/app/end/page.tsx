@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import React from "react";
 
 type TitleTier = { min: number; title: string };
@@ -154,23 +155,31 @@ export default function EndPage() {
         }
 
         .sonyaPlaceholder {
-          width: 220px;
-          height: 280px;
-          border-radius: 18px;
-          background: rgba(255, 255, 255, 0.8);
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          font-weight: 900;
-        }
+  width: 220px;
+  height: 280px;
+  border-radius: 18px;
+  background: radial-gradient(circle at 50% 20%, rgba(212, 175, 55, 0.16), rgba(255, 255, 255, 0.78) 55%, rgba(255, 255, 255, 0.62));
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+}
 
-        .hint {
-          margin-top: 6px;
-          font-size: 12px;
-          opacity: 0.6;
-        }
+.imgWrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+}
+
+.imgGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 55% 30%, rgba(212, 175, 55, 0.22), transparent 58%);
+  opacity: 0.8;
+}
+
 
         .stats {
           padding: 12px 16px;
