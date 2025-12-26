@@ -5,7 +5,6 @@ import Image from "next/image";
 import React from "react";
 
 import actressesData from "@/data/actresses.json";
-import zodiacCards from "@/data/zodiacCards.json";
 
 type Mode = "free" | "timed";
 type Tone = "cute" | "savage";
@@ -24,20 +23,7 @@ type Falling = {
   actress: Actress;
   xPct: number;
   yPx: number;
-  speedPxPerSec: number;
-  bornAt: number;
-};
-
-type ZodiacCard = {
-  id: string;
-  starSign: string;
-  symbol: string;
-  element: "Fire" | "Earth" | "Air" | "Water";
-  energy: string;
-  rarity: "common" | "rare" | "partner";
-  colourTheme: { primary: string; accent: string };
-  unlockText: string;
-  partnerBoostedText: string;
+  speed: number;
 };
 
 function uid() {
@@ -48,17 +34,13 @@ function clamp(n: number, a: number, b: number) {
   return Math.max(a, Math.min(b, n));
 }
 
-
 function shortName(full: string) {
-  // Prefer first name, fallback to trimmed label
-  const first = full.trim().split(/\s+/)[0] || full;
-  if (first.length <= 12) return first;
-  return first.slice(0, 11) + "…";
-}
-
-function ellipsis(s: string, max: number) {
-  if (s.length <= max) return s;
-  return s.slice(0, Math.max(0, max - 1)) + "…";
+  const clean = (full || "").trim();
+  const parts = clean.split(/\s+/);
+  if (parts.length <= 2) return clean;
+  const first = parts[0];
+  const lastInitial = parts[parts.length - 1]?.[0] || "";
+  return `${first} ${lastInitial}.`;
 }
 
 function getTone(): Tone {
@@ -67,28 +49,24 @@ function getTone(): Tone {
   return v === "savage" ? "savage" : "cute";
 }
 
-function cuteLines(name: string, sign: string) {
+function cuteLine(name: string, sign: string) {
   const pool = [
-    `✨ ${name} caught, ${sign} energy collected`,
-    `${name} spotted, ${sign} luck activated`,
-    `Soft catch, big vibes, hi ${name}`,
-    `Collected ${name}, ${sign} glow on`
+    `Caught ${name}, ${sign} energy secured`,
+    `${name} spotted, destiny says yes`,
+    `Soft catch, big vibes, hello ${name}`,
+    `${name} collected, runway blessed`
   ];
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function savageLines(name: string, sign: string) {
+function savageLine(name: string, sign: string) {
   const pool = [
-    `⚡ ${name} caught, ${sign} energy secured`,
-    `${name} captured, runway cleared`,
+    `Caught ${name}, runway cleared`,
     `${name} secured, ${sign} power unlocked`,
-    `No excuses, only catches, hi ${name}`
+    `No excuses, only catches, hi ${name}`,
+    `${name} tried to pass, I said not today`
   ];
   return pool[Math.floor(Math.random() * pool.length)];
-}
-
-function setLocalSet(key: string, ids: Set<string>) {
-  window.localStorage.setItem(key, JSON.stringify(Array.from(ids)));
 }
 
 function getLocalSet(key: string): Set<string> {
@@ -103,12 +81,14 @@ function getLocalSet(key: string): Set<string> {
   }
 }
 
+function setLocalSet(key: string, ids: Set<string>) {
+  window.localStorage.setItem(key, JSON.stringify(Array.from(ids)));
+}
+
 export default function PlayPage() {
   const actresses: Actress[] = (actressesData as any).actresses ?? [];
-  const zodiac: ZodiacCard[] = (zodiacCards as any).cards ?? [];
 
   const stageRef = React.useRef<HTMLDivElement | null>(null);
-  const draggingRef = React.useRef(false);
 
   const [mode, setMode] = React.useState<Mode>("timed");
   const [tone, setTone] = React.useState<Tone>("cute");
@@ -117,45 +97,27 @@ export default function PlayPage() {
   const [score, setScore] = React.useState(0);
   const [caught, setCaught] = React.useState(0);
   const [streak, setStreak] = React.useState(0);
-  const [toast, setToast] = React.useState<string>("");
+  const [toast, setToast] = React.useState("");
 
-  // Refs to avoid re-starting animation loops on every state change (keeps movement smooth)
-  const scoreRef = React.useRef(0);
-  const caughtRef = React.useRef(0);
-  const streakRef = React.useRef(0);
-  const cardsRef = React.useRef<number[]>([]);
-  const toneRef = React.useRef<Tone>("cute");
-
-  const [sonyaXPct, setSonyaXPct] = React.useState(50);
+  const [targetXPct, setTargetXPct] = React.useState(50);
+  const [renderXPct, setRenderXPct] = React.useState(50);
 
   const [falling, setFalling] = React.useState<Falling[]>([]);
 
-  // Initialise tone from storage
   React.useEffect(() => {
     setTone(getTone());
   }, []);
 
-  // Keep refs in sync
-  React.useEffect(() => {
-    toneRef.current = tone;
-  }, [tone]);
-
-  React.useEffect(() => {
-    cardsRef.current = cards;
-  }, [cards]);
-
-  // Keyboard controls
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
-      if (e.key === "ArrowLeft" || k === "a") setSonyaXPct((v) => clamp(v - 5, 0, 100));
-      if (e.key === "ArrowRight" || k === "d") setSonyaXPct((v) => clamp(v + 5, 0, 100));
+      if (e.key === "ArrowLeft" || k === "a") setTargetXPct((v) => clamp(v - 6, 0, 100));
+      if (e.key === "ArrowRight" || k === "d") setTargetXPct((v) => clamp(v + 6, 0, 100));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Pointer drag on stage
   React.useEffect(() => {
     const el = stageRef.current;
     if (!el) return;
@@ -166,135 +128,116 @@ export default function PlayPage() {
       return clamp(p, 0, 100);
     };
 
-    const onDown = (e: PointerEvent) => {
-      draggingRef.current = true;
-      setSonyaXPct(toPct(e.clientX));
-    };
+    const onDown = (e: PointerEvent) => setTargetXPct(toPct(e.clientX));
     const onMove = (e: PointerEvent) => {
-      if (!draggingRef.current) return;
-      setSonyaXPct(toPct(e.clientX));
-    };
-    const onUp = () => {
-      draggingRef.current = false;
+      if (e.buttons === 0) return;
+      setTargetXPct(toPct(e.clientX));
     };
 
     el.addEventListener("pointerdown", onDown);
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
+    el.addEventListener("pointermove", onMove);
 
     return () => {
       el.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointermove", onMove);
     };
   }, []);
 
-  // Timer
+  React.useEffect(() => {
+    let raf = 0;
+    const loop = () => {
+      setRenderXPct((x) => x + (targetXPct - x) * 0.22);
+      raf = window.requestAnimationFrame(loop);
+    };
+    raf = window.requestAnimationFrame(loop);
+    return () => window.cancelAnimationFrame(raf);
+  }, [targetXPct]);
+
   React.useEffect(() => {
     if (mode !== "timed") return;
-
     if (timeLeft <= 0) return;
-
     const id = window.setInterval(() => setTimeLeft((t) => t - 1), 1000);
     return () => window.clearInterval(id);
   }, [mode, timeLeft]);
 
-  // End run
   React.useEffect(() => {
     if (mode !== "timed") return;
     if (timeLeft > 0) return;
 
     window.localStorage.setItem("mamiLastScore", String(score));
     window.localStorage.setItem("mamiLastCaught", String(caught));
+
     const best = Number(window.localStorage.getItem("mamiBestScore") || "0");
     if (Number.isFinite(best) && score > best) window.localStorage.setItem("mamiBestScore", String(score));
 
     window.location.href = "/end";
   }, [mode, timeLeft, score, caught]);
 
-  // Spawn actresses
   React.useEffect(() => {
     if (actresses.length === 0) return;
 
-    const spawn = () => {
-      // Slower and calmer drops, feels more like a "runway" than a chaos rain
-      const baseSpeed = mode === "timed" ? 115 : 100;
-      const speed = baseSpeed + Math.random() * 55;
-      const pick = actresses[Math.floor(Math.random() * actresses.length)];
+    const MAX_FALLING = 2;
+    const spawnMs = mode === "timed" ? 1350 : 1550;
 
+    const spawn = () => {
       setFalling((cur) => {
+        if (cur.length >= MAX_FALLING) return cur;
+
+        const pick = actresses[Math.floor(Math.random() * actresses.length)];
+        const base = mode === "timed" ? 120 : 105;
+        const speed = base + Math.random() * 55;
+
         const next: Falling = {
           id: uid(),
           actress: pick,
           xPct: Math.floor(Math.random() * 86) + 7,
-          yPx: -90,
-          speedPxPerSec: speed,
-          bornAt: Date.now()
+          yPx: -88,
+          speed
         };
-        // Keep list small and do not overcrowd the runway
-        const MAX_FALLING = mode === "timed" ? 3 : 2;
-        if (cur.length >= MAX_FALLING) return cur;
-        const trimmed = cur.slice(-MAX_FALLING);
-        return [...trimmed, next];
+
+        return [...cur, next];
       });
     };
 
-    const ms = mode === "timed" ? 2000 : 2300;
-    const id = window.setInterval(spawn, ms);
+    const id = window.setInterval(spawn, spawnMs);
     spawn();
-
     return () => window.clearInterval(id);
   }, [actresses, mode]);
 
-  // Animation loop (use refs so the loop stays stable and smooth)
   React.useEffect(() => {
     let raf = 0;
     let last = performance.now();
 
     const loop = (now: number) => {
       const el = stageRef.current;
-      const stageH = el ? el.getBoundingClientRect().height : 600;
+      const stageH = el ? el.getBoundingClientRect().height : 700;
 
       const dt = (now - last) / 1000;
       last = now;
 
+      const catchY = stageH - 230;
+
       setFalling((cur) => {
-        if (cur.length === 0) return cur;
-
-        const sonyaX = sonyaXPct;
-        const catchY = stageH - 210; // catch zone around Sonya height
         const next: Falling[] = [];
-
         for (const f of cur) {
-          const y = f.yPx + f.speedPxPerSec * dt;
+          const y = f.yPx + f.speed * dt;
 
-          // collision: in catch band and near X
-          const inBand = y >= catchY - 28 && y <= catchY + 38;
-          const nearX = Math.abs(f.xPct - sonyaX) < 8.5;
+          const inBand = y >= catchY - 30 && y <= catchY + 44;
+          const nearX = Math.abs(f.xPct - renderXPct) < 10;
 
           if (inBand && nearX) {
-            // caught
-            const combo = Math.min(8, streakRef.current + 1);
-            const points = 10 + combo * 2;
+            const combo = Math.min(10, streak + 1);
+            const pts = 12 + combo * 2;
 
-            // Update refs first (single source of truth for scoring inside the loop)
-            streakRef.current = combo;
-            scoreRef.current = scoreRef.current + points;
-            caughtRef.current = caughtRef.current + 1;
+            setScore((s) => s + pts);
+            setCaught((c) => c + 1);
+            setStreak(combo);
 
-            // Reflect in UI (batched by React)
-            setStreak(streakRef.current);
-            setScore(scoreRef.current);
-            setCaught(caughtRef.current);
-
-            const displayName = shortName(f.actress.name);
-            const line = toneRef.current === "savage"
-              ? savageLines(displayName, f.actress.starSign)
-              : cuteLines(displayName, f.actress.starSign);
+            const nm = shortName(f.actress.name);
+            const line = tone === "savage" ? savageLine(nm, f.actress.starSign) : cuteLine(nm, f.actress.starSign);
             setToast(line);
-            window.setTimeout(() => setToast(""), 1200);
+            window.setTimeout(() => setToast(""), 900);
 
-            // unlock zodiac card by star sign
             const collected = getLocalSet("mamiCollectedZodiacIds");
             collected.add(f.actress.starSignId);
             setLocalSet("mamiCollectedZodiacIds", collected);
@@ -303,16 +246,13 @@ export default function PlayPage() {
             continue;
           }
 
-          // missed: if goes past bottom
           if (y > stageH + 120) {
-            streakRef.current = 0;
             setStreak(0);
             continue;
           }
 
           next.push({ ...f, yPx: y });
         }
-
         return next;
       });
 
@@ -321,9 +261,9 @@ export default function PlayPage() {
 
     raf = window.requestAnimationFrame(loop);
     return () => window.cancelAnimationFrame(raf);
-  }, [sonyaXPct, running]);
+  }, [renderXPct, streak, tone]);
 
-  const startRun = () => {
+  const startTimed = () => {
     setMode("timed");
     setTimeLeft(60);
     setScore(0);
@@ -333,7 +273,7 @@ export default function PlayPage() {
     setToast("");
   };
 
-  const freePlay = () => {
+  const switchToFree = () => {
     setMode("free");
     setTimeLeft(60);
     setScore(0);
@@ -373,116 +313,102 @@ export default function PlayPage() {
             key={f.id}
             className="falling"
             style={{ left: `${f.xPct}%`, transform: `translate(-50%, ${f.yPx}px)` }}
-            aria-label={`${shortName(f.actress.name)} ${f.actress.starSign}`}
           >
-            <div className="tagTop">
-              <span className="star" aria-hidden="true">★</span>
-              <span className="name" title={f.actress.name}>{shortName(f.actress.name)}</span>
-            </div>
-            <div className="tagBottom">
-              <span className="sign">{f.actress.starSign}</span>
-              <span className="dot" aria-hidden="true">•</span>
-              <span className="cz">{f.actress.chineseZodiac}</span>
+            <div className="pillTag">
+              <span className="spark" aria-hidden="true">✦</span>
+              <span className="pillName" title={f.actress.name}>{shortName(f.actress.name)}</span>
+              <span className="sep" aria-hidden="true">•</span>
+              <span className="pillMeta">{f.actress.starSign}</span>
             </div>
           </div>
         ))}
 
-        <div className="sonya" style={{ left: `${sonyaXPct}%` }} aria-label="Sonya">
-          <div className="sonyaGlow" aria-hidden="true" />
-          <div className="sonyaImg">
-            <Image src="/characters/sonya.png" alt="Sonya" fill priority sizes="160px" style={{ objectFit: "contain" }} />
-          </div>
+        <div className="sonya" style={{ left: `${renderXPct}%` }} aria-label="Sonya">
+          <Image
+            src="/characters/sonya.png"
+            alt="Sonya"
+            fill
+            priority
+            sizes="(max-width: 520px) 160px, 180px"
+            style={{ objectFit: "contain" }}
+          />
         </div>
 
         {toast ? <div className="toast" role="status">{toast}</div> : null}
 
-        <div className="hint">Drag anywhere to move Sonya, or use arrow keys</div>
+        <div className="hint">Drag to move, or use arrow keys</div>
       </section>
 
       <section className="controls" aria-label="Controls">
-        <button type="button" onClick={() => setSonyaXPct((v) => clamp(v - 10, 0, 100))}>◄</button>
-        <button type="button" onClick={() => setSonyaXPct((v) => clamp(v + 10, 0, 100))}>►</button>
+        <button type="button" onClick={() => setTargetXPct((v) => clamp(v - 12, 0, 100))}>◄</button>
+        <button type="button" onClick={() => setTargetXPct((v) => clamp(v + 12, 0, 100))}>►</button>
       </section>
 
       <section className="modes" aria-label="Modes">
-        <button type="button" onClick={mode === "timed" ? freePlay : startRun}>
+        <button type="button" onClick={mode === "timed" ? switchToFree : startTimed}>
           {mode === "timed" ? "Switch to free play" : "Start 60 second run"}
         </button>
-        <Link href="/collection" className="ghost">View collection</Link>
+        <Link href="/collection" className="ghost">Collection</Link>
         <Link href="/" className="ghost">Exit</Link>
       </section>
 
-      <nav className="navBar" aria-label="Bottom navigation">
+      <nav className="navBar" aria-label="Navigation">
         <Link className="navLink" href="/">Home</Link>
         <Link className="navLink navLinkActive" href="/play">Play</Link>
         <Link className="navLink" href="/collection">Cards</Link>
       </nav>
 
       <style jsx>{`
-        .page {
-          min-height: 100vh;
-          background: transparent;
-          display: flex;
-          flex-direction: column;
-          padding-bottom: 76px;
-          color: #1e1e1e;
-        }
+        .page { min-height: 100vh; background: transparent; padding-bottom: 92px; }
 
         .hud {
-          height: 62px;
+          height: 64px;
           display: flex;
           justify-content: space-between;
           align-items: center;
           padding: 0 14px;
-          background: rgba(250, 247, 241, 0.92);
-          border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-          backdrop-filter: blur(10px);
-          gap: 10px;
+          background: rgba(255, 255, 255, 0.55);
+          border-bottom: 1px solid rgba(0,0,0,0.08);
+          backdrop-filter: blur(12px);
         }
 
-        .hudLeft, .hudRight {
-          display: flex;
-          gap: 8px;
-          align-items: center;
-          flex-wrap: wrap;
-        }
+        .hudLeft, .hudRight { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
         .brand {
-          font-weight: 900;
-          letter-spacing: 0.2px;
-          padding: 8px 10px;
+          padding: 8px 12px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.75);
-          border: 1px solid rgba(0, 0, 0, 0.08);
+          font-weight: 950;
+          background: rgba(255,255,255,0.70);
+          border: 1px solid rgba(0,0,0,0.08);
         }
 
         .pill {
           padding: 8px 10px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.7);
-          border: 1px solid rgba(0, 0, 0, 0.08);
           font-weight: 900;
           font-size: 13px;
+          background: rgba(255,255,255,0.68);
+          border: 1px solid rgba(0,0,0,0.08);
         }
 
         .stage {
-          flex: 1;
           position: relative;
+          height: calc(100vh - 64px - 132px);
+          min-height: 520px;
           overflow: hidden;
-          background:
-            radial-gradient(circle at 50% 10%, rgba(212, 175, 55, 0.14), transparent 55%),
-            linear-gradient(#fdfaf4, #f2e7d6);
           touch-action: none;
           user-select: none;
+          background: radial-gradient(circle at 50% 0%, rgba(212,175,55,0.16), transparent 55%),
+                      linear-gradient(180deg, rgba(255,255,255,0.38), rgba(0,0,0,0.03));
         }
 
         .lights {
           position: absolute;
           inset: -40% -20%;
           background:
-            radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.65), transparent 50%),
-            radial-gradient(circle at 80% 25%, rgba(255, 255, 255, 0.55), transparent 52%),
-            radial-gradient(circle at 60% 70%, rgba(255, 255, 255, 0.45), transparent 55%);
+            radial-gradient(circle at 22% 20%, rgba(255,255,255,0.62), transparent 48%),
+            radial-gradient(circle at 82% 18%, rgba(255,255,255,0.55), transparent 52%),
+            radial-gradient(circle at 60% 72%, rgba(255,255,255,0.42), transparent 55%);
           opacity: 0.55;
           pointer-events: none;
         }
@@ -492,116 +418,79 @@ export default function PlayPage() {
           left: -10%;
           right: -10%;
           bottom: 0;
-          height: 42%;
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(0, 0, 0, 0.06));
+          height: 44%;
+          background: linear-gradient(180deg, rgba(255,255,255,0), rgba(0,0,0,0.06));
           pointer-events: none;
         }
 
-        .falling {
-          position: absolute;
-          top: 0;
-          width: max-content;
-          max-width: min(260px, 74vw);
+        .falling { position: absolute; top: 0; }
+
+        .pillTag {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 14px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.62);
-          border: 1px solid rgba(255, 255, 255, 0.7);
-          box-shadow: 0 16px 38px rgba(0, 0, 0, 0.12);
-          padding: 8px 12px;
+          background: rgba(255,255,255,0.72);
+          border: 1px solid rgba(0,0,0,0.10);
+          box-shadow: 0 14px 38px rgba(0,0,0,0.10);
           backdrop-filter: blur(10px);
-          will-change: transform;
+          max-width: min(360px, 86vw);
         }
 
-        .tagTop {
-          display: flex;
-          align-items: baseline;
-          gap: 8px;
-          font-weight: 900;
-        }
+        .spark { color: rgba(212,175,55,1); }
 
-        .star {
-          color: rgba(212, 175, 55, 1);
-        }
-
-        .name {
-          font-size: 13px;
-          line-height: 1.15;
-          max-width: 190px;
+        .pillName {
+          font-weight: 950;
+          white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          white-space: nowrap;
+          max-width: 170px;
         }
 
-        .tagBottom {
-          margin-top: 4px;
-          display: flex;
-          gap: 8px;
-          align-items: center;
-          font-weight: 900;
-          font-size: 12px;
-          opacity: 0.82;
-        }
+        .sep { opacity: 0.45; }
 
-        .dot {
-          opacity: 0.5;
-        }
+        .pillMeta { font-weight: 900; opacity: 0.78; white-space: nowrap; }
 
         .sonya {
           position: absolute;
-          bottom: 148px;
+          bottom: 52px;
           transform: translateX(-50%);
-          width: 170px;
-          height: 300px;
-        }
-
-        .sonyaGlow {
-          position: absolute;
-          inset: -18px;
-          background: radial-gradient(circle at 50% 55%, rgba(212, 175, 55, 0.24), transparent 60%);
-          opacity: 0.95;
+          width: 180px;
+          height: 180px;
           pointer-events: none;
-        }
-
-        .sonyaImg {
-          position: absolute;
-          inset: 0;
-          border-radius: 0;
-          background: transparent;
-          border: 0;
-          box-shadow: none;
-          overflow: visible;
-          padding: 0;
+          filter: drop-shadow(0 18px 34px rgba(0,0,0,0.14));
         }
 
         .toast {
           position: absolute;
           left: 50%;
-          top: 18px;
+          top: 14px;
           transform: translateX(-50%);
-          max-width: min(520px, 90vw);
+          max-width: min(640px, 92vw);
           padding: 10px 14px;
-          border-radius: 18px;
-          background: rgba(255, 255, 255, 0.78);
-          border: 1px solid rgba(0, 0, 0, 0.12);
-          font-weight: 900;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.74);
+          border: 1px solid rgba(0,0,0,0.10);
+          font-weight: 950;
           text-align: center;
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.10);
-          font-size: 15px;
-          line-height: 1.25;
-          white-space: normal;
+          box-shadow: 0 16px 40px rgba(0,0,0,0.10);
+          backdrop-filter: blur(10px);
         }
 
         .hint {
           position: absolute;
           left: 50%;
-          bottom: 16px;
+          bottom: 12px;
           transform: translateX(-50%);
           font-size: 12px;
           font-weight: 900;
           opacity: 0.72;
           padding: 8px 12px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.6);
-          border: 1px solid rgba(0, 0, 0, 0.08);
+          background: rgba(255,255,255,0.60);
+          border: 1px solid rgba(0,0,0,0.08);
+          backdrop-filter: blur(10px);
         }
 
         .controls {
@@ -615,10 +504,10 @@ export default function PlayPage() {
           width: 64px;
           height: 44px;
           border-radius: 14px;
-          border: 1px solid rgba(0, 0, 0, 0.15);
-          background: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(0,0,0,0.15);
+          background: rgba(255,255,255,0.92);
           font-size: 18px;
-          font-weight: 900;
+          font-weight: 950;
           color: #1e1e1e;
         }
 
@@ -629,13 +518,12 @@ export default function PlayPage() {
           padding: 6px 16px 16px;
         }
 
-        .modes button,
-        .ghost {
+        .modes button, .ghost {
           height: 46px;
           border-radius: 14px;
-          border: 1px solid rgba(0, 0, 0, 0.15);
-          background: rgba(255, 255, 255, 0.92);
-          font-weight: 900;
+          border: 1px solid rgba(0,0,0,0.15);
+          background: rgba(255,255,255,0.90);
+          font-weight: 950;
           text-decoration: none;
           color: #1e1e1e;
           display: inline-flex;
@@ -643,61 +531,12 @@ export default function PlayPage() {
           justify-content: center;
         }
 
-        .ghost {
-          background: rgba(255, 255, 255, 0.62);
-        }
-
-        .bottomNav {
-          position: fixed;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          height: 64px;
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr;
-          gap: 6px;
-          padding: 9px 10px;
-          background: rgba(250, 247, 241, 0.92);
-          backdrop-filter: blur(10px);
-          border-top: 1px solid rgba(0, 0, 0, 0.08);
-        }
-
-        .navItem {
-          display: inline-flex;
-          justify-content: center;
-          align-items: center;
-          border-radius: 14px;
-          text-decoration: none;
-          font-weight: 900;
-          color: #1e1e1e;
-          background: rgba(255, 255, 255, 0.55);
-          border: 1px solid rgba(0, 0, 0, 0.08);
-        }
-
-        .navActive {
-          background: rgba(255, 255, 255, 0.88);
-          box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
-        }
+        .ghost { background: rgba(255,255,255,0.62); }
 
         @media (max-width: 520px) {
-          .modes {
-            grid-template-columns: 1fr;
-          }
-          .sonya {
-            bottom: 140px;
-          }
-        }
-
-        @media (min-width: 900px) {
-          .bottomNav {
-            max-width: 520px;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            border-bottom: none;
-            border-top-left-radius: 18px;
-            border-top-right-radius: 18px;
-          }
+          .modes { grid-template-columns: 1fr; }
+          .sonya { width: 160px; height: 160px; bottom: 50px; }
+          .pillName { max-width: 140px; }
         }
       `}</style>
     </main>
