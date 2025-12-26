@@ -1,9 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import React from "react";
 
 type Mode = "free" | "timed";
+
+type Target = {
+  id: string;
+  x: number; // percent
+  createdAt: number;
+  durationMs: number;
+};
+
+function uid() {
+  return Math.random().toString(16).slice(2) + "-" + Date.now().toString(16);
+}
 
 export default function PlayPage() {
   const [x, setX] = React.useState(50);
@@ -11,8 +23,12 @@ export default function PlayPage() {
   const [caught, setCaught] = React.useState(0);
   const [mode, setMode] = React.useState<Mode>("free");
   const [timeLeft, setTimeLeft] = React.useState(60);
-  const [spawnX, setSpawnX] = React.useState<number | null>(null);
+  const [target, setTarget] = React.useState<Target | null>(null);
 
+  const stageRef = React.useRef<HTMLDivElement | null>(null);
+  const draggingRef = React.useRef(false);
+
+  // Keyboard controls
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
@@ -23,77 +39,166 @@ export default function PlayPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Touch / pointer drag on stage
   React.useEffect(() => {
-    const id = setInterval(() => {
-      setSpawnX(Math.floor(Math.random() * 90) + 5);
-    }, 1200);
-    return () => clearInterval(id);
+    const el = stageRef.current;
+    if (!el) return;
+
+    const toPercent = (clientX: number) => {
+      const rect = el.getBoundingClientRect();
+      const p = ((clientX - rect.left) / rect.width) * 100;
+      return Math.max(0, Math.min(100, p));
+    };
+
+    const onDown = (e: PointerEvent) => {
+      draggingRef.current = true;
+      setX(toPercent(e.clientX));
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!draggingRef.current) return;
+      setX(toPercent(e.clientX));
+    };
+    const onUp = () => {
+      draggingRef.current = false;
+    };
+
+    el.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+
+    return () => {
+      el.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
   }, []);
 
+  // Spawn falling targets
+  React.useEffect(() => {
+    const spawn = () => {
+      const durationMs = 2300;
+      const t: Target = {
+        id: uid(),
+        x: Math.floor(Math.random() * 86) + 7,
+        createdAt: Date.now(),
+        durationMs
+      };
+      setTarget(t);
+
+      // Clear if not caught by the end
+      window.setTimeout(() => {
+        setTarget((cur) => (cur?.id === t.id ? null : cur));
+      }, durationMs + 60);
+    };
+
+    const id = window.setInterval(spawn, 1100);
+    spawn();
+
+    return () => window.clearInterval(id);
+  }, []);
+
+  // Timer for timed mode
   React.useEffect(() => {
     if (mode !== "timed") return;
     if (timeLeft <= 0) return;
 
-    const id = setInterval(() => {
-      setTimeLeft((t) => t - 1);
-    }, 1000);
-
-    return () => clearInterval(id);
+    const id = window.setInterval(() => setTimeLeft((t) => t - 1), 1000);
+    return () => window.clearInterval(id);
   }, [mode, timeLeft]);
 
+  // Auto end timed run
   React.useEffect(() => {
     if (mode !== "timed") return;
     if (timeLeft > 0) return;
 
     window.localStorage.setItem("mamiLastScore", String(score));
     window.localStorage.setItem("mamiLastCaught", String(caught));
+
     const best = Number(window.localStorage.getItem("mamiBestScore") || "0");
     if (Number.isFinite(best) && score > best) window.localStorage.setItem("mamiBestScore", String(score));
 
     window.location.href = "/end";
-  }, [timeLeft, mode, score, caught]);
+  }, [mode, timeLeft, score, caught]);
 
+  // Collision check using RAF: catch when target reaches "catch zone" (near bottom)
   React.useEffect(() => {
-    if (spawnX === null) return;
-    if (Math.abs(spawnX - x) < 8) {
-      setScore((s) => s + 10);
-      setCaught((c) => c + 1);
-      setSpawnX(null);
-    }
-  }, [spawnX, x]);
+    let raf = 0;
+
+    const loop = () => {
+      if (target) {
+        const now = Date.now();
+        const progress = (now - target.createdAt) / target.durationMs; // 0..1
+        const inCatchZone = progress >= 0.78 && progress <= 0.92;
+
+        if (inCatchZone && Math.abs(target.x - x) < 8) {
+          // caught
+          setScore((s) => s + 10);
+          setCaught((c) => c + 1);
+          setTarget(null);
+        }
+      }
+
+      raf = window.requestAnimationFrame(loop);
+    };
+
+    raf = window.requestAnimationFrame(loop);
+    return () => window.cancelAnimationFrame(raf);
+  }, [target, x]);
 
   const startTimed = () => {
     setMode("timed");
     setScore(0);
     setCaught(0);
     setTimeLeft(60);
-    setSpawnX(null);
   };
 
-  const resetFree = () => {
+  const switchToFree = () => {
     setMode("free");
     setScore(0);
     setCaught(0);
-    setSpawnX(null);
+    setTimeLeft(60);
   };
 
   return (
     <main className="page">
       <header className="hud">
-        <div>Score: {score}</div>
-        <div>{mode === "timed" ? `Time: ${timeLeft}` : "Free Play"}</div>
-        <div>🃏</div>
+        <div className="hudLeft">
+          <div className="pill">Score: {score}</div>
+          <div className="pill">Caught: {caught}</div>
+        </div>
+        <div className="hudRight">
+          <div className="pill">{mode === "timed" ? `Time: ${timeLeft}` : "Free Play"}</div>
+        </div>
       </header>
 
-      <section className="stage" aria-label="Play area">
-        {spawnX !== null ? (
-          <div className="actress" style={{ left: `${spawnX}%` }} aria-label="Actress target">
-            ★
+      <section className="stage" ref={stageRef} aria-label="Play area">
+        <div className="spotlight" aria-hidden="true" />
+        <div className="runway" aria-hidden="true" />
+
+        {target ? (
+          <div className="target" style={{ left: `${target.x}%` }} aria-label="Target">
+            <span className="targetIcon" aria-hidden="true">
+              ★
+            </span>
           </div>
         ) : null}
 
         <div className="sonya" style={{ left: `${x}%` }} aria-label="Sonya">
-          Sonya
+          <div className="sonyaGlow" aria-hidden="true" />
+          <div className="sonyaImg">
+            <Image
+              src="/characters/sonya.png"
+              alt="Sonya"
+              fill
+              priority
+              sizes="140px"
+              style={{ objectFit: "contain" }}
+            />
+          </div>
+        </div>
+
+        <div className="hint">
+          Drag anywhere to move, or use arrow keys
         </div>
       </section>
 
@@ -107,7 +212,7 @@ export default function PlayPage() {
       </section>
 
       <section className="modes" aria-label="Mode controls">
-        <button type="button" onClick={mode === "timed" ? resetFree : startTimed}>
+        <button type="button" onClick={mode === "timed" ? switchToFree : startTimed}>
           {mode === "timed" ? "Switch to Free Play" : "60 Second Run"}
         </button>
         <Link href="/" className="exit">
@@ -134,50 +239,127 @@ export default function PlayPage() {
           display: flex;
           flex-direction: column;
           padding-bottom: 76px;
+          color: #1e1e1e;
         }
 
         .hud {
-          height: 48px;
+          height: 56px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 0 16px;
-          background: rgba(255, 255, 255, 0.8);
+          padding: 0 14px;
+          background: rgba(250, 247, 241, 0.92);
           border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+          backdrop-filter: blur(10px);
+        }
+
+        .hudLeft,
+        .hudRight {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+
+        .pill {
+          padding: 8px 10px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.7);
+          border: 1px solid rgba(0, 0, 0, 0.08);
           font-weight: 900;
-          color: #1e1e1e;
+          font-size: 13px;
         }
 
         .stage {
           flex: 1;
           position: relative;
           overflow: hidden;
-          background: linear-gradient(#fdfaf4, #f5efe6);
+          background: radial-gradient(circle at 50% 10%, rgba(212, 175, 55, 0.12), transparent 55%),
+            linear-gradient(#fdfaf4, #f3eadb);
+          touch-action: none;
+          user-select: none;
+        }
+
+        .spotlight {
+          position: absolute;
+          inset: -30% -20%;
+          background: radial-gradient(circle at 60% 35%, rgba(255, 255, 255, 0.7), transparent 55%);
+          opacity: 0.55;
+          pointer-events: none;
+        }
+
+        .runway {
+          position: absolute;
+          left: -10%;
+          right: -10%;
+          bottom: 0;
+          height: 38%;
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(0, 0, 0, 0.06));
+          pointer-events: none;
+        }
+
+        .target {
+          position: absolute;
+          top: -24px;
+          transform: translateX(-50%);
+          animation: fall 2.3s linear forwards;
+          filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.18));
+        }
+
+        .targetIcon {
+          font-size: 28px;
+        }
+
+        @keyframes fall {
+          0% { transform: translateX(-50%) translateY(0); opacity: 0.95; }
+          85% { opacity: 0.95; }
+          100% { transform: translateX(-50%) translateY(88vh); opacity: 0.0; }
         }
 
         .sonya {
           position: absolute;
-          bottom: 88px;
+          bottom: 140px;
           transform: translateX(-50%);
-          background: rgba(255, 255, 255, 0.9);
-          padding: 10px 14px;
-          border-radius: 16px;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          font-weight: 900;
+          width: 140px;
+          height: 140px;
         }
 
-        .actress {
+        .sonyaGlow {
           position: absolute;
-          top: 38%;
+          inset: -14px;
+          background: radial-gradient(circle at 50% 55%, rgba(212, 175, 55, 0.22), transparent 60%);
+          opacity: 0.9;
+          pointer-events: none;
+        }
+
+        .sonyaImg {
+          position: absolute;
+          inset: 0;
+          border-radius: 22px;
+          background: rgba(255, 255, 255, 0.7);
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          box-shadow: 0 18px 40px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+          padding: 10px;
+        }
+
+        .hint {
+          position: absolute;
+          left: 50%;
+          bottom: 16px;
           transform: translateX(-50%);
-          font-size: 28px;
-          filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.15));
+          font-size: 12px;
+          font-weight: 900;
+          opacity: 0.7;
+          padding: 8px 12px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.6);
+          border: 1px solid rgba(0, 0, 0, 0.08);
         }
 
         .controls {
           display: flex;
           justify-content: center;
-          gap: 20px;
+          gap: 14px;
           padding: 10px 16px 6px;
         }
 
@@ -246,6 +428,10 @@ export default function PlayPage() {
         }
 
         @media (min-width: 900px) {
+          .sonya {
+            bottom: 150px;
+          }
+
           .bottomNav {
             max-width: 520px;
             left: 50%;
@@ -254,6 +440,12 @@ export default function PlayPage() {
             border-bottom: none;
             border-top-left-radius: 18px;
             border-top-right-radius: 18px;
+          }
+
+          @keyframes fall {
+            0% { transform: translateX(-50%) translateY(0); opacity: 0.95; }
+            90% { opacity: 0.95; }
+            100% { transform: translateX(-50%) translateY(78vh); opacity: 0.0; }
           }
         }
       `}</style>
