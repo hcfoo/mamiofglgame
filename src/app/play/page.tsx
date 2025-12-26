@@ -69,20 +69,20 @@ function getTone(): Tone {
 
 function cuteLines(name: string, sign: string) {
   const pool = [
-    `Caught ${name} (${sign}) and my heart just did a little twirl`,
-    `${name} spotted, ${sign} energy collected`,
-    `Aaaa ${name} is here, ${sign} luck activated`,
-    `Soft catch, big vibes, hello ${name}`
+    `✨ ${name} caught, ${sign} energy collected`,
+    `${name} spotted, ${sign} luck activated`,
+    `Soft catch, big vibes, hi ${name}`,
+    `Collected ${name}, ${sign} glow on`
   ];
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function savageLines(name: string, sign: string) {
   const pool = [
-    `Caught ${name} (${sign}), runway cleared`,
+    `⚡ ${name} caught, ${sign} energy secured`,
+    `${name} captured, runway cleared`,
     `${name} secured, ${sign} power unlocked`,
-    `No excuses, only catches, hi ${name}`,
-    `${name} tried to pass, I said not today`
+    `No excuses, only catches, hi ${name}`
   ];
   return pool[Math.floor(Math.random() * pool.length)];
 }
@@ -119,6 +119,13 @@ export default function PlayPage() {
   const [streak, setStreak] = React.useState(0);
   const [toast, setToast] = React.useState<string>("");
 
+  // Refs to avoid re-starting animation loops on every state change (keeps movement smooth)
+  const scoreRef = React.useRef(0);
+  const caughtRef = React.useRef(0);
+  const streakRef = React.useRef(0);
+  const cardsRef = React.useRef<number[]>([]);
+  const toneRef = React.useRef<Tone>("cute");
+
   const [sonyaXPct, setSonyaXPct] = React.useState(50);
 
   const [falling, setFalling] = React.useState<Falling[]>([]);
@@ -127,6 +134,15 @@ export default function PlayPage() {
   React.useEffect(() => {
     setTone(getTone());
   }, []);
+
+  // Keep refs in sync
+  React.useEffect(() => {
+    toneRef.current = tone;
+  }, [tone]);
+
+  React.useEffect(() => {
+    cardsRef.current = cards;
+  }, [cards]);
 
   // Keyboard controls
   React.useEffect(() => {
@@ -201,8 +217,9 @@ export default function PlayPage() {
     if (actresses.length === 0) return;
 
     const spawn = () => {
-      const baseSpeed = mode === "timed" ? 140 : 120;
-      const speed = baseSpeed + Math.random() * 80;
+      // Slower and calmer drops, feels more like a "runway" than a chaos rain
+      const baseSpeed = mode === "timed" ? 115 : 100;
+      const speed = baseSpeed + Math.random() * 55;
       const pick = actresses[Math.floor(Math.random() * actresses.length)];
 
       setFalling((cur) => {
@@ -215,21 +232,21 @@ export default function PlayPage() {
           bornAt: Date.now()
         };
         // Keep list small and do not overcrowd the runway
-        const MAX_FALLING = 3;
+        const MAX_FALLING = mode === "timed" ? 3 : 2;
         if (cur.length >= MAX_FALLING) return cur;
         const trimmed = cur.slice(-MAX_FALLING);
         return [...trimmed, next];
       });
     };
 
-    const ms = mode === "timed" ? 1400 : 1600;
+    const ms = mode === "timed" ? 2000 : 2300;
     const id = window.setInterval(spawn, ms);
     spawn();
 
     return () => window.clearInterval(id);
   }, [actresses, mode]);
 
-  // Animation loop
+  // Animation loop (use refs so the loop stays stable and smooth)
   React.useEffect(() => {
     let raf = 0;
     let last = performance.now();
@@ -252,20 +269,28 @@ export default function PlayPage() {
           const y = f.yPx + f.speedPxPerSec * dt;
 
           // collision: in catch band and near X
-          const inBand = y >= catchY - 25 && y <= catchY + 35
-          const nearX = Math.abs(f.xPct - sonyaX) < 9;
+          const inBand = y >= catchY - 28 && y <= catchY + 38;
+          const nearX = Math.abs(f.xPct - sonyaX) < 8.5;
 
           if (inBand && nearX) {
             // caught
-            const combo = Math.min(8, streak + 1);
+            const combo = Math.min(8, streakRef.current + 1);
             const points = 10 + combo * 2;
 
-            // update score and streak outside loop via functional updates
-            setScore((s) => s + points);
-            setCaught((c) => c + 1);
-            setStreak(combo);
+            // Update refs first (single source of truth for scoring inside the loop)
+            streakRef.current = combo;
+            scoreRef.current = scoreRef.current + points;
+            caughtRef.current = caughtRef.current + 1;
 
-            const line = tone === "savage" ? savageLines(f.actress.name, f.actress.starSign) : cuteLines(f.actress.name, f.actress.starSign);
+            // Reflect in UI (batched by React)
+            setStreak(streakRef.current);
+            setScore(scoreRef.current);
+            setCaught(caughtRef.current);
+
+            const displayName = shortName(f.actress.name);
+            const line = toneRef.current === "savage"
+              ? savageLines(displayName, f.actress.starSign)
+              : cuteLines(displayName, f.actress.starSign);
             setToast(line);
             window.setTimeout(() => setToast(""), 1200);
 
@@ -280,6 +305,7 @@ export default function PlayPage() {
 
           // missed: if goes past bottom
           if (y > stageH + 120) {
+            streakRef.current = 0;
             setStreak(0);
             continue;
           }
@@ -295,7 +321,7 @@ export default function PlayPage() {
 
     raf = window.requestAnimationFrame(loop);
     return () => window.cancelAnimationFrame(raf);
-  }, [sonyaXPct, streak, tone]);
+  }, [sonyaXPct, running]);
 
   const startRun = () => {
     setMode("timed");
@@ -474,12 +500,14 @@ export default function PlayPage() {
         .falling {
           position: absolute;
           top: 0;
-          width: min(320px, 82vw);
-          border-radius: 16px;
-          background: rgba(255, 255, 255, 0.78);
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
-          padding: 9px 10px;
+          width: max-content;
+          max-width: min(260px, 74vw);
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.62);
+          border: 1px solid rgba(255, 255, 255, 0.7);
+          box-shadow: 0 16px 38px rgba(0, 0, 0, 0.12);
+          padding: 8px 12px;
+          backdrop-filter: blur(10px);
           will-change: transform;
         }
 
@@ -521,8 +549,8 @@ export default function PlayPage() {
           position: absolute;
           bottom: 148px;
           transform: translateX(-50%);
-          width: 160px;
-          height: 160px;
+          width: 170px;
+          height: 300px;
         }
 
         .sonyaGlow {
@@ -536,12 +564,12 @@ export default function PlayPage() {
         .sonyaImg {
           position: absolute;
           inset: 0;
-          border-radius: 24px;
-          background: rgba(255, 255, 255, 0.72);
-          border: 1px solid rgba(0, 0, 0, 0.08);
-          box-shadow: 0 22px 50px rgba(0, 0, 0, 0.12);
-          overflow: hidden;
-          padding: 12px;
+          border-radius: 0;
+          background: transparent;
+          border: 0;
+          box-shadow: none;
+          overflow: visible;
+          padding: 0;
         }
 
         .toast {
@@ -549,14 +577,17 @@ export default function PlayPage() {
           left: 50%;
           top: 18px;
           transform: translateX(-50%);
-          max-width: min(640px, 90vw);
+          max-width: min(520px, 90vw);
           padding: 10px 14px;
-          border-radius: 999px;
+          border-radius: 18px;
           background: rgba(255, 255, 255, 0.78);
           border: 1px solid rgba(0, 0, 0, 0.12);
           font-weight: 900;
           text-align: center;
           box-shadow: 0 16px 40px rgba(0, 0, 0, 0.10);
+          font-size: 15px;
+          line-height: 1.25;
+          white-space: normal;
         }
 
         .hint {
