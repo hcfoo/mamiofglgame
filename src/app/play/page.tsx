@@ -96,6 +96,7 @@ export default function PlayPage() {
   const [timeLeft, setTimeLeft] = React.useState(60);
   const [score, setScore] = React.useState(0);
   const [caught, setCaught] = React.useState(0);
+  const [runCaughtIds, setRunCaughtIds] = React.useState<Set<string>>(() => new Set());
   const [streak, setStreak] = React.useState(0);
   const [toast, setToast] = React.useState("");
 
@@ -166,12 +167,16 @@ export default function PlayPage() {
 
     window.localStorage.setItem("mamiLastScore", String(score));
     window.localStorage.setItem("mamiLastCaught", String(caught));
+    window.localStorage.setItem(
+      "mamiLastCaughtIds",
+      JSON.stringify(Array.from(runCaughtIds))
+    );
 
     const best = Number(window.localStorage.getItem("mamiBestScore") || "0");
     if (Number.isFinite(best) && score > best) window.localStorage.setItem("mamiBestScore", String(score));
 
     window.location.href = "/end";
-  }, [mode, timeLeft, score, caught]);
+  }, [mode, timeLeft, score, caught, runCaughtIds]);
 
   React.useEffect(() => {
     if (actresses.length === 0) return;
@@ -243,6 +248,16 @@ export default function PlayPage() {
             setLocalSet("mamiCollectedZodiacIds", collected);
             window.localStorage.setItem("mamiCardsCollected", String(collected.size));
 
+            // Persist caught actresses (overall) and this run
+            const allCaught = getLocalSet("mamiCaughtActressIds");
+            allCaught.add(f.actress.id);
+            setLocalSet("mamiCaughtActressIds", allCaught);
+            setRunCaughtIds((prev) => {
+              const nextSet = new Set(prev);
+              nextSet.add(f.actress.id);
+              return nextSet;
+            });
+
             continue;
           }
 
@@ -271,6 +286,7 @@ export default function PlayPage() {
     setStreak(0);
     setFalling([]);
     setToast("");
+    setRunCaughtIds(new Set());
   };
 
   const switchToFree = () => {
@@ -281,6 +297,7 @@ export default function PlayPage() {
     setStreak(0);
     setFalling([]);
     setToast("");
+    setRunCaughtIds(new Set());
   };
 
   const cardsCollected = (() => {

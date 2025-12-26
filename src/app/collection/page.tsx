@@ -3,6 +3,7 @@
 import Link from "next/link";
 import React from "react";
 import zodiacCards from "@/data/zodiacCards.json";
+import actressesData from "@/data/actresses.json";
 
 type ZodiacRarity = "common" | "rare" | "partner";
 
@@ -26,6 +27,31 @@ type ZodiacCardsJson = {
   };
   cards: ZodiacCardData[];
 };
+
+type Actress = {
+  id: string;
+  name: string;
+  starSignId: string;
+  chineseZodiac: string;
+};
+
+function getLocalSet(key: string): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  const raw = window.localStorage.getItem(key);
+  const parsed = safeParseJson<string[]>(raw);
+  return toSet(parsed);
+}
+
+function shortName(full: string) {
+  const trimmed = (full || "").trim();
+  if (!trimmed) return "";
+  const parts = trimmed.split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  const first = parts[0];
+  const last = parts[parts.length - 1];
+  if (first.length <= 10) return first;
+  return last.length <= 10 ? last : first.slice(0, 10);
+}
 
 function safeParseJson<T>(raw: string | null): T | null {
   if (!raw) return null;
@@ -55,20 +81,25 @@ function getTone(): "cute" | "savage" {
 
 export default function CollectionPage() {
   const data = zodiacCards as ZodiacCardsJson;
+  const actresses = actressesData as Actress[];
 
   const [collectedIds, setCollectedIds] = React.useState<Set<string>>(new Set());
   const [partnerBoostedIds, setPartnerBoostedIds] = React.useState<Set<string>>(new Set());
+  const [caughtActressIds, setCaughtActressIds] = React.useState<Set<string>>(new Set());
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [tone, setTone] = React.useState<"cute" | "savage">("cute");
+  const [showCaughtModal, setShowCaughtModal] = React.useState(false);
 
   React.useEffect(() => {
     setTone(getTone());
 
     const collectedRaw = safeParseJson<string[]>(window.localStorage.getItem("mamiCollectedZodiacIds"));
     const partnerRaw = safeParseJson<string[]>(window.localStorage.getItem("mamiPartnerBoostedZodiacIds"));
+    const caughtRaw = safeParseJson<string[]>(window.localStorage.getItem("mamiCaughtActressIds"));
 
     setCollectedIds(toSet(collectedRaw));
     setPartnerBoostedIds(toSet(partnerRaw));
+    setCaughtActressIds(toSet(caughtRaw));
   }, []);
 
   const cards = data.cards ?? [];
@@ -77,6 +108,11 @@ export default function CollectionPage() {
   const selectedCard = selectedId ? cards.find((c) => c.id === selectedId) ?? null : null;
   const selectedCollected = selectedCard ? collectedIds.has(selectedCard.id) : false;
   const selectedPartner = selectedCard ? partnerBoostedIds.has(selectedCard.id) : false;
+  const selectedActresses = selectedCard
+    ? actresses
+        .filter((a) => a.starSignId === selectedCard.id)
+        .sort((a, b) => a.name.localeCompare(b.name))
+    : [];
 
   const closeModal = () => setSelectedId(null);
 
@@ -110,11 +146,18 @@ export default function CollectionPage() {
           <div>
             <h1 className="title">Zodiac Collection</h1>
             <p className="subtitle">
-              Mami of GL · {collectedCount}/{cards.length} collected · Tone: {tone}
+              Mami of GL · {collectedCount}/{cards.length} collected · Actresses caught: {caughtActressIds.size} · Tone: {tone}
             </p>
           </div>
 
           <div className="headActions">
+            <button
+              type="button"
+              className="headBtn"
+              onClick={() => setShowCaughtModal(true)}
+            >
+              Actresses
+            </button>
             <Link className="headBtn" href="/play">
               Play
             </Link>
@@ -212,6 +255,26 @@ export default function CollectionPage() {
               </div>
 
               <div className="row">
+                <div className="label">Actresses</div>
+                <div className="value">
+                  {selectedActresses.length ? (
+                    <div className="chips">
+                      {selectedActresses.map((a) => {
+                        const caught = caughtActressIds.has(a.id);
+                        return (
+                          <span key={a.id} className={`chip ${caught ? "chipOn" : ""}`}>
+                            {shortName(a.name)}{caught ? " ✓" : ""}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className="muted">No actresses mapped yet</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="row">
                 <div className="label">Unlock line</div>
                 <div className="value">
                   {selectedPartner ? selectedCard.partnerBoostedText : selectedCard.unlockText}
@@ -219,6 +282,47 @@ export default function CollectionPage() {
               </div>
 
               {!selectedCollected ? <div className="hint">Catch an actress with this star sign to unlock it.</div> : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showCaughtModal ? (
+        <div className="modal" role="dialog" aria-modal="true" aria-label="Actresses caught">
+          <button
+            className="overlay"
+            type="button"
+            onClick={() => setShowCaughtModal(false)}
+            aria-label="Close"
+          />
+          <div className="panel">
+            <div className="panelHeader">
+              <div className="panelTitle">
+                <div>
+                  <div className="panelName">Actresses caught</div>
+                  <div className="panelSub">{caughtActressIds.size} total</div>
+                </div>
+              </div>
+              <button type="button" className="closeBtn" onClick={() => setShowCaughtModal(false)}>
+                Close
+              </button>
+            </div>
+
+            <div className="panelBody">
+              {actresses.filter((a) => caughtActressIds.has(a.id)).length ? (
+                <div className="chips">
+                  {actresses
+                    .filter((a) => caughtActressIds.has(a.id))
+                    .sort((a, b) => a.starSignId.localeCompare(b.starSignId) || a.name.localeCompare(b.name))
+                    .map((a) => (
+                      <span key={a.id} className="chip chipOn">
+                        {shortName(a.name)} · {a.starSignId}
+                      </span>
+                    ))}
+                </div>
+              ) : (
+                <div className="muted">No actresses caught yet. Go to Play and start catching.</div>
+              )}
             </div>
           </div>
         </div>
