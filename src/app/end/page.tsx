@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import React from "react";
-import AppShell from "@/components/AppShell";
 
 type TitleTier = { min: number; title: string };
 
@@ -63,8 +62,7 @@ export default function EndPage() {
   };
 
   return (
-    <AppShell activeTab="play">
-      <main className="page">
+    <main className="page">
       <header className="header">
         <h1 className="title">Run Complete</h1>
         <p className="subtitle">You owned the moment</p>
@@ -112,6 +110,18 @@ export default function EndPage() {
           Share Result
         </button>
       </section>
+
+      <nav className="bottomNav" aria-label="Bottom navigation">
+        <Link className="navItem" href="/">
+          Home
+        </Link>
+        <Link className="navItem" href="/play">
+          Play
+        </Link>
+        <Link className="navItem" href="/collection">
+          Cards
+        </Link>
+      </nav>
 
       <style jsx>{`
         .page {
@@ -298,7 +308,5 @@ export default function EndPage() {
         }
       `}</style>
     </main>
-      </main>
-    </AppShell>
   );
 }

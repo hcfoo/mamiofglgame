@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import React from "react";
-import AppShell from "@/components/AppShell";
 
 import actressesData from "@/data/actresses.json";
 import zodiacCards from "@/data/zodiacCards.json";
@@ -310,8 +309,7 @@ export default function PlayPage() {
   })();
 
   return (
-    <AppShell activeTab="play">
-      <main className="page">
+    <main className="page">
       <header className="hud">
         <div className="hudLeft">
           <div className="brand">Mami of GL</div>
@@ -372,6 +370,12 @@ export default function PlayPage() {
         <Link href="/collection" className="ghost">View collection</Link>
         <Link href="/" className="ghost">Exit</Link>
       </section>
+
+      <nav className="bottomNav" aria-label="Bottom navigation">
+        <Link className="navItem" href="/">Home</Link>
+        <Link className="navItem navActive" href="/play">Play</Link>
+        <Link className="navItem" href="/collection">Cards</Link>
+      </nav>
 
       <style jsx>{`
         .page {
@@ -647,7 +651,5 @@ export default function PlayPage() {
         }
       `}</style>
     </main>
-      </main>
-    </AppShell>
   );
 }
