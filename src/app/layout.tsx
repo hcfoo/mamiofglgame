@@ -1,3 +1,5 @@
+import "./globals.css";
+
 export const metadata = {
   title: "Mami of GL",
   description: "Catch the GL stars and collect zodiac energy"
@@ -6,7 +8,9 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" }}>
+      <body>
+        <div className="luxeBg" aria-hidden="true" />
+        <div className="luxeGrain" aria-hidden="true" />
         {children}
       </body>
     </html>

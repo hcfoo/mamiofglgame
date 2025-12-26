@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import React from "react";
+import AppShell from "@/components/AppShell";
 
 type Tone = "cute" | "savage";
 
@@ -40,7 +41,8 @@ export default function HomePage() {
   };
 
   return (
-    <main className="page">
+    <AppShell activeTab="home">
+      <main className="page">
       <header className="header">
         <div className="titleBlock">
           <h1 className="title">Mami of GL</h1>
@@ -110,22 +112,10 @@ export default function HomePage() {
         <p className="tip">Tip: Lookmhee appears as a partner bonus</p>
       </section>
 
-      <nav className="bottomNav" aria-label="Bottom navigation">
-        <Link className="navItem navActive" href="/">
-          Home
-        </Link>
-        <Link className="navItem" href="/play">
-          Play
-        </Link>
-        <Link className="navItem" href="/collection">
-          Cards
-        </Link>
-      </nav>
-
       <style jsx>{`
         .page {
           min-height: 100vh;
-          background: #faf7f1;
+          background: transparent;
           color: #1e1e1e;
           padding-bottom: 76px;
         }
@@ -389,5 +379,7 @@ export default function HomePage() {
         }
       `}</style>
     </main>
+      </main>
+    </AppShell>
   );
 }

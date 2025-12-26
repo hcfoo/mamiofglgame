@@ -1,10 +1,12 @@
 "use client";
+import AppShell from "@/components/AppShell";
 
 import Link from "next/link";
 
 export default function HowToPlayPage() {
   return (
-    <main className="page">
+    <AppShell activeTab="home">
+      <main className="page">
       <header className="header">
         <h1 className="title">How to Play</h1>
         <p className="subtitle">Mami of GL</p>
@@ -70,22 +72,10 @@ export default function HowToPlayPage() {
         </Link>
       </section>
 
-      <nav className="bottomNav" aria-label="Bottom navigation">
-        <Link className="navItem" href="/">
-          Home
-        </Link>
-        <Link className="navItem navActive" href="/how-to-play">
-          Play
-        </Link>
-        <Link className="navItem" href="/collection">
-          Cards
-        </Link>
-      </nav>
-
       <style jsx>{`
         .page {
           min-height: 100vh;
-          background: #faf7f1;
+          background: transparent;
           color: #1e1e1e;
           padding-bottom: 76px;
         }
@@ -270,5 +260,7 @@ export default function HowToPlayPage() {
         }
       `}</style>
     </main>
+      </main>
+    </AppShell>
   );
 }

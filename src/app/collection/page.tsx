@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import React from "react";
+import AppShell from "@/components/AppShell";
 import zodiacCards from "@/data/zodiacCards.json";
 
 type ZodiacRarity = "common" | "rare" | "partner";
@@ -104,7 +105,8 @@ export default function CollectionPage() {
   };
 
   return (
-    <main className="page">
+    <AppShell activeTab="cards">
+      <main className="page">
       <header className="header">
         <div className="headInner">
           <div>
@@ -224,22 +226,10 @@ export default function CollectionPage() {
         </div>
       ) : null}
 
-      <nav className="bottomNav" aria-label="Bottom navigation">
-        <Link className="navItem" href="/">
-          Home
-        </Link>
-        <Link className="navItem" href="/play">
-          Play
-        </Link>
-        <Link className="navItem navActive" href="/collection">
-          Cards
-        </Link>
-      </nav>
-
       <style jsx>{`
         .page {
           min-height: 100vh;
-          background: #faf7f1;
+          background: transparent;
           color: #1e1e1e;
           padding-bottom: 76px;
         }
@@ -556,5 +546,7 @@ export default function CollectionPage() {
         }
       `}</style>
     </main>
+      </main>
+    </AppShell>
   );
 }
