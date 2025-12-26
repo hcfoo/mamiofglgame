@@ -31,8 +31,12 @@ type ZodiacCardsJson = {
 type Actress = {
   id: string;
   name: string;
+  // e.g. "Gemini" (human readable)
+  starSign: string;
+  // e.g. "gemini" (id used to match ZodiacCardData.starSign)
   starSignId: string;
   chineseZodiac: string;
+  birthdate: string;
 };
 
 function getLocalSet(key: string): Set<string> {
@@ -81,7 +85,8 @@ function getTone(): "cute" | "savage" {
 
 export default function CollectionPage() {
   const data = zodiacCards as ZodiacCardsJson;
-  const actresses = actressesData as Actress[];
+  // actresses.json is shaped like { meta: {...}, actresses: [...] }
+  const actresses = ((actressesData as unknown) as { actresses: Actress[] }).actresses;
 
   const [collectedIds, setCollectedIds] = React.useState<Set<string>>(new Set());
   const [partnerBoostedIds, setPartnerBoostedIds] = React.useState<Set<string>>(new Set());
