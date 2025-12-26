@@ -1,0 +1,181 @@
+{
+  "meta": {
+    "version": "1.0",
+    "totalCards": 12,
+    "rarityTypes": [
+      "common",
+      "rare",
+      "partner"
+    ]
+  },
+  "cards": [
+    {
+      "id": "aries",
+      "starSign": "Aries",
+      "symbol": "♈",
+      "element": "Fire",
+      "energy": "Bold initiative",
+      "rarity": "common",
+      "colourTheme": {
+        "primary": "#EAD7B7",
+        "accent": "#D4AF37"
+      },
+      "unlockText": "Bold energy unlocked",
+      "partnerBoostedText": "Fearless momentum amplified"
+    },
+    {
+      "id": "taurus",
+      "starSign": "Taurus",
+      "symbol": "♉",
+      "element": "Earth",
+      "energy": "Grounded elegance",
+      "rarity": "common",
+      "colourTheme": {
+        "primary": "#EFE6D8",
+        "accent": "#C2A67E"
+      },
+      "unlockText": "Grounded elegance collected",
+      "partnerBoostedText": "Stability reinforced"
+    },
+    {
+      "id": "gemini",
+      "starSign": "Gemini",
+      "symbol": "♊",
+      "element": "Air",
+      "energy": "Quick wit",
+      "rarity": "common",
+      "colourTheme": {
+        "primary": "#F1F1F1",
+        "accent": "#BFC9D1"
+      },
+      "unlockText": "Quick wit activated",
+      "partnerBoostedText": "Dual energy aligned"
+    },
+    {
+      "id": "cancer",
+      "starSign": "Cancer",
+      "symbol": "♋",
+      "element": "Water",
+      "energy": "Emotional depth",
+      "rarity": "rare",
+      "colourTheme": {
+        "primary": "#F4E8EA",
+        "accent": "#D9A3B3"
+      },
+      "unlockText": "Emotional depth unlocked",
+      "partnerBoostedText": "Protective bond strengthened"
+    },
+    {
+      "id": "leo",
+      "starSign": "Leo",
+      "symbol": "♌",
+      "element": "Fire",
+      "energy": "Main character aura",
+      "rarity": "rare",
+      "colourTheme": {
+        "primary": "#F6E3B4",
+        "accent": "#E0B341"
+      },
+      "unlockText": "Main character aura unlocked",
+      "partnerBoostedText": "Spotlight power amplified"
+    },
+    {
+      "id": "virgo",
+      "starSign": "Virgo",
+      "symbol": "♍",
+      "element": "Earth",
+      "energy": "Quiet precision",
+      "rarity": "common",
+      "colourTheme": {
+        "primary": "#EFEDE8",
+        "accent": "#B8B2A6"
+      },
+      "unlockText": "Precision energy collected",
+      "partnerBoostedText": "Flawless execution achieved"
+    },
+    {
+      "id": "libra",
+      "starSign": "Libra",
+      "symbol": "♎",
+      "element": "Air",
+      "energy": "Perfect balance",
+      "rarity": "rare",
+      "colourTheme": {
+        "primary": "#F3EDF7",
+        "accent": "#C5B0D5"
+      },
+      "unlockText": "Balance achieved",
+      "partnerBoostedText": "Harmony elevated"
+    },
+    {
+      "id": "scorpio",
+      "starSign": "Scorpio",
+      "symbol": "♏",
+      "element": "Water",
+      "energy": "Magnetic intensity",
+      "rarity": "rare",
+      "colourTheme": {
+        "primary": "#F0E6EC",
+        "accent": "#B77C9E"
+      },
+      "unlockText": "Magnetic intensity unlocked",
+      "partnerBoostedText": "Deep connection activated"
+    },
+    {
+      "id": "sagittarius",
+      "starSign": "Sagittarius",
+      "symbol": "♐",
+      "element": "Fire",
+      "energy": "Adventurous spirit",
+      "rarity": "common",
+      "colourTheme": {
+        "primary": "#F5EAD6",
+        "accent": "#D8B77A"
+      },
+      "unlockText": "Adventurous spirit unlocked",
+      "partnerBoostedText": "Freedom energy expanded"
+    },
+    {
+      "id": "capricorn",
+      "starSign": "Capricorn",
+      "symbol": "♑",
+      "element": "Earth",
+      "energy": "Quiet authority",
+      "rarity": "rare",
+      "colourTheme": {
+        "primary": "#EDEBE7",
+        "accent": "#9E9A92"
+      },
+      "unlockText": "Authority energy collected",
+      "partnerBoostedText": "Leadership reinforced"
+    },
+    {
+      "id": "aquarius",
+      "starSign": "Aquarius",
+      "symbol": "♒",
+      "element": "Air",
+      "energy": "Unconventional vision",
+      "rarity": "common",
+      "colourTheme": {
+        "primary": "#EEF2F4",
+        "accent": "#9EBAC7"
+      },
+      "unlockText": "Vision unlocked",
+      "partnerBoostedText": "Future alignment activated"
+    },
+    {
+      "id": "pisces",
+      "starSign": "Pisces",
+      "symbol": "♓",
+      "element": "Water",
+      "energy": "Dreamlike intuition",
+      "rarity": "rare",
+      "colourTheme": {
+        "primary": "#F4ECF5",
+        "accent": "#C7A3C9"
+      },
+      "unlockText": "Intuition awakened",
+      "partnerBoostedText": "Soul level connection achieved"
+    }
+  ]
+}
