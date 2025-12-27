@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import BottomTabs from "@/components/BottomTabs";
-import { zodiacCards } from "@/lib/zodiacData";
+import actressesData from "@/data/actresses.json";
 
 function readSet(key: string): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -19,7 +19,8 @@ function readSet(key: string): Set<string> {
 }
 
 export default function HomePage() {
-  const total = zodiacCards.actresses.length;
+  // Total collectible cards = total actresses in the dataset
+  const total = Array.isArray(actressesData) ? actressesData.length : 0;
 
   const [tone, setTone] = React.useState<"cute" | "savage">("cute");
   const [collectedCount, setCollectedCount] = React.useState<number>(0);
