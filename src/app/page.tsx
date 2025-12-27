@@ -72,6 +72,10 @@ export default function HomePage() {
       </section>
 
       <section className="actions" aria-label="Actions">
+        <div className="progressPill" aria-label="Zodiac energy progress">
+          Zodiac Energy <span className="progressStrong">{cardsCollected}/12</span>
+        </div>
+
         <Link className="btnPrimary" href="/play">
           Play Now
         </Link>
@@ -80,13 +84,8 @@ export default function HomePage() {
           Zodiac Collection
         </Link>
 
-        <Link className="howTo" href="/how-to-play">
-          How to Play
-        </Link>
-
-        <div className="toneBlock" aria-label="Caption tone toggle">
-          <div className="toneLabel">Caption tone</div>
-
+        <div className="toneRow" aria-label="Caption tone">
+          <span className="toneRowLabel">Caption tone</span>
           <div className="toneToggle" role="group" aria-label="Cute or Savage">
             <button
               type="button"
@@ -125,10 +124,10 @@ export default function HomePage() {
 
       <style jsx>{`
         .page {
-          min-height: 100vh;
+          min-height: 100svh;
           background: transparent;
           color: #1e1e1e;
-          padding-bottom: 76px;
+          padding-bottom: 0;
         }
 
         .header {
@@ -165,6 +164,25 @@ export default function HomePage() {
           border: 1px solid rgba(0, 0, 0, 0.08);
           font-size: 13px;
           font-weight: 700;
+        }
+
+        .progressPill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          justify-content: center;
+          padding: 10px 14px;
+          border-radius: 14px;
+          background: rgba(255, 255, 255, 0.7);
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          font-size: 16px;
+          font-weight: 800;
+          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+          margin-bottom: 12px;
+        }
+
+        .progressStrong {
+          font-weight: 950;
         }
 
         .dot {

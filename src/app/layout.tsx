@@ -11,7 +11,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <div className="luxeBg" aria-hidden="true" />
         <div className="luxeGrain" aria-hidden="true" />
-        {children}
+        <div className="appShell">
+          <div className="appFrame">{children}</div>
+        </div>
       </body>
     </html>
   );

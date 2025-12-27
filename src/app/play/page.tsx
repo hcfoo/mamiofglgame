@@ -353,20 +353,7 @@ export default function PlayPage() {
 
         {toast ? <div className="toast" role="status">{toast}</div> : null}
 
-        <div className="hint">Drag to move, or use arrow keys</div>
-      </section>
-
-      <section className="controls" aria-label="Controls">
-        <button type="button" onClick={() => setTargetXPct((v) => clamp(v - 12, 0, 100))}>◄</button>
-        <button type="button" onClick={() => setTargetXPct((v) => clamp(v + 12, 0, 100))}>►</button>
-      </section>
-
-      <section className="modes" aria-label="Modes">
-        <button type="button" onClick={mode === "timed" ? switchToFree : startTimed}>
-          {mode === "timed" ? "Switch to free play" : "Start 60 second run"}
-        </button>
-        <Link href="/collection" className="ghost">Collection</Link>
-        <Link href="/" className="ghost">Exit</Link>
+        <div className="hint">Drag to move</div>
       </section>
 
       <nav className="navBar" aria-label="Navigation">
@@ -376,20 +363,50 @@ export default function PlayPage() {
       </nav>
 
       <style jsx>{`
-        .page { min-height: 100vh; background: transparent; padding-bottom: 92px; }
+        .page {
+          min-height: 100svh;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          overflow: hidden;
+          padding-bottom: calc(78px + env(safe-area-inset-bottom));
+          background:
+            radial-gradient(900px 600px at 50% 0%, rgba(255, 255, 255, 0.92), rgba(248, 242, 231, 0.98)),
+            radial-gradient(900px 700px at 50% 70%, rgba(255, 232, 196, 0.55), rgba(0, 0, 0, 0));
+        }
+
+        .page:before {
+          content: "";
+          position: absolute;
+          inset: -20%;
+          background:
+            radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.65) 0 2px, rgba(255, 255, 255, 0) 3px),
+            radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.6) 0 2px, rgba(255, 255, 255, 0) 3px),
+            radial-gradient(circle at 40% 70%, rgba(255, 255, 255, 0.55) 0 2px, rgba(255, 255, 255, 0) 3px);
+          opacity: 0.35;
+          filter: blur(0.2px);
+          pointer-events: none;
+        }
 
         .hud {
-          height: 64px;
           display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 0 14px;
+          flex-direction: column;
+          justify-content: center;
+          gap: 8px;
+          padding: calc(env(safe-area-inset-top) + 10px) 14px 10px;
           background: rgba(255, 255, 255, 0.55);
           border-bottom: 1px solid rgba(0,0,0,0.08);
           backdrop-filter: blur(12px);
         }
 
-        .hudLeft, .hudRight { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .hudLeft, .hudRight {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: nowrap;
+          width: 100%;
+        }
 
         .brand {
           padding: 8px 12px;
@@ -410,8 +427,8 @@ export default function PlayPage() {
 
         .stage {
           position: relative;
-          height: calc(100vh - 64px - 132px);
-          min-height: 520px;
+          flex: 1;
+          min-height: 0;
           overflow: hidden;
           touch-action: none;
           user-select: none;
@@ -436,7 +453,9 @@ export default function PlayPage() {
           right: -10%;
           bottom: 0;
           height: 44%;
-          background: linear-gradient(180deg, rgba(255,255,255,0), rgba(0,0,0,0.06));
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0), rgba(0,0,0,0.06)),
+            radial-gradient(60% 85% at 50% 100%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
           pointer-events: none;
         }
 
@@ -471,10 +490,10 @@ export default function PlayPage() {
 
         .sonya {
           position: absolute;
-          bottom: 52px;
+          bottom: calc(90px + env(safe-area-inset-bottom));
           transform: translateX(-50%);
-          width: 180px;
-          height: 180px;
+          width: min(240px, 52vw);
+          height: auto;
           pointer-events: none;
           filter: drop-shadow(0 18px 34px rgba(0,0,0,0.14));
         }

@@ -12,6 +12,8 @@
   --radius:18px;
   --radius2:24px;
   --max:680px;
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
 }
 
 *{box-sizing:border-box}
@@ -22,6 +24,41 @@ body{
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   background: radial-gradient(circle at 50% 0%, rgba(212,175,55,.14), transparent 48%),
               linear-gradient(180deg, var(--bg1), var(--bg2));
+}
+
+/* App shell keeps the UI aligned like the reference mock, and avoids iOS Safari
+   bottom-bar overlap by using safe-area insets */
+.appShell{
+  min-height: 100svh;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+}
+.appFrame{
+  width: 100%;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+@media (min-width: 700px){
+  .appShell{
+    padding: calc(12px + var(--safe-top)) 12px calc(18px + var(--safe-bottom));
+  }
+  .appFrame{
+    width: min(430px, 100%);
+    min-height: calc(100svh - (12px + var(--safe-top)) - (18px + var(--safe-bottom)));
+  }
+  .appFrame{
+    border-radius: 34px;
+    border: 1px solid rgba(0,0,0,.08);
+    background: rgba(255,255,255,.04);
+    box-shadow: 0 24px 80px rgba(0,0,0,.18);
+    overflow: hidden;
+  }
 }
 
 a{color:inherit}
@@ -48,15 +85,15 @@ a:hover{opacity:.9}
 
 /* Bottom nav (shared across pages that render .navBar) */
 .navBar{
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 10px;
-  width: min(920px, calc(100% - 24px));
+  position: sticky;
+  left: 0;
+  bottom: 0;
+  transform: none;
+  width: 100%;
   display: flex;
   justify-content: space-around;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 10px 12px calc(10px + var(--safe-bottom));
   border-radius: 16px;
   background: var(--glass);
   border: 1px solid var(--border);
