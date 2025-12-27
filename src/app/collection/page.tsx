@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import React from "react";
+
+import BottomTabs from "@/components/BottomTabs";
 import zodiacCards from "@/data/zodiacCards.json";
 import actressesData from "@/data/actresses.json";
 
@@ -333,17 +335,7 @@ export default function CollectionPage() {
         </div>
       ) : null}
 
-      <nav className="navBar" aria-label="Bottom navigation">
-        <Link className="navLink" href="/">
-          Home
-        </Link>
-        <Link className="navLink" href="/play">
-          Play
-        </Link>
-        <Link className="navLink navLinkActive" href="/collection">
-          Cards
-        </Link>
-      </nav>
+      <BottomTabs />
 
       <style jsx>{`
         .page {

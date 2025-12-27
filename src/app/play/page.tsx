@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import React from "react";
+
+import BottomTabs from "@/components/BottomTabs";
 
 import actressesData from "@/data/actresses.json";
 
@@ -195,7 +196,8 @@ export default function PlayPage() {
         const next: Falling = {
           id: uid(),
           actress: pick,
-          xPct: Math.floor(Math.random() * 86) + 7,
+          // Keep within safe bounds so the pill never clips off-screen on mobile
+          xPct: Math.floor(Math.random() * 70) + 15,
           yPx: -88,
           speed
         };
@@ -356,11 +358,7 @@ export default function PlayPage() {
         <div className="hint">Drag to move</div>
       </section>
 
-      <nav className="navBar" aria-label="Navigation">
-        <Link className="navLink" href="/">Home</Link>
-        <Link className="navLink navLinkActive" href="/play">Play</Link>
-        <Link className="navLink" href="/collection">Cards</Link>
-      </nav>
+      <BottomTabs />
 
       <style jsx>{`
         .page {

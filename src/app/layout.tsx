@@ -10,6 +10,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <div className="luxeBg" aria-hidden="true" />
+        <div className="luxeSparkles" aria-hidden="true" />
         <div className="luxeGrain" aria-hidden="true" />
         <div className="appShell">
           <div className="appFrame">{children}</div>

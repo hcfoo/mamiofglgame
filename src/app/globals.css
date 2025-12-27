@@ -9,9 +9,13 @@
   --shadow:0 20px 55px rgba(0,0,0,.10);
   --shadow2:0 12px 26px rgba(0,0,0,.08);
   --gold:#d4af37;
+  --gold1:#d8b98a;
+  --gold2:#b8905f;
+  --cream:#fff4e2;
   --radius:18px;
   --radius2:24px;
   --max:680px;
+  --phoneW:430px;
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
 }
@@ -39,7 +43,7 @@ body{
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  background: var(--surface);
+  background: transparent;
   border-radius: 0;
   overflow: hidden;
 }
@@ -49,7 +53,7 @@ body{
     padding: calc(12px + var(--safe-top)) 12px calc(18px + var(--safe-bottom));
   }
   .appFrame{
-    width: min(430px, 100%);
+    width: min(var(--phoneW), 100%);
     min-height: calc(100svh - (12px + var(--safe-top)) - (18px + var(--safe-bottom)));
   }
   .appFrame{
@@ -70,6 +74,29 @@ a:hover{opacity:.9}
   pointer-events:none;
 }
 
+.luxeSparkles{
+  position:fixed;
+  inset:-20px;
+  pointer-events:none;
+  opacity:.85;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255,255,255,.95), transparent 12%),
+    radial-gradient(circle at 22% 62%, rgba(255,255,255,.55), transparent 14%),
+    radial-gradient(circle at 58% 20%, rgba(255,255,255,.70), transparent 16%),
+    radial-gradient(circle at 82% 40%, rgba(255,255,255,.75), transparent 14%),
+    radial-gradient(circle at 70% 78%, rgba(255,255,255,.55), transparent 16%),
+    radial-gradient(circle at 35% 86%, rgba(255,255,255,.75), transparent 15%),
+    radial-gradient(circle at 50% 50%, rgba(255,241,214,.65), transparent 55%);
+  filter: blur(.2px);
+  animation: sparkleFloat 10s ease-in-out infinite;
+}
+
+@keyframes sparkleFloat{
+  0%{transform: translate3d(0,0,0) scale(1); opacity:.80}
+  50%{transform: translate3d(0,-10px,0) scale(1.02); opacity:.92}
+  100%{transform: translate3d(0,0,0) scale(1); opacity:.80}
+}
+
 .luxeGrain{
   position:fixed;
   inset:0;
@@ -81,6 +108,46 @@ a:hover{opacity:.9}
     radial-gradient(circle at 60% 70%, rgba(255,255,255,.45), transparent 45%),
     repeating-linear-gradient(0deg, rgba(255,255,255,.08), rgba(255,255,255,.08) 1px, transparent 1px, transparent 3px);
   mix-blend-mode: soft-light;
+}
+
+/* Reusable UI primitives */
+.glassCard{
+  background: var(--glass);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow2);
+  backdrop-filter: blur(14px);
+}
+.pill{
+  border-radius: 999px;
+}
+.btnPrimary{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: linear-gradient(180deg, rgba(216,185,138,.95), rgba(184,144,95,.95));
+  color: rgba(255,255,255,.95);
+  box-shadow: 0 14px 30px rgba(0,0,0,.14);
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+.btnPrimary:active{transform: translateY(1px)}
+.btnGhost{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.72);
+  box-shadow: var(--shadow2);
+  font-weight: 700;
+}
+.pagePad{
+  padding: calc(16px + var(--safe-top)) 16px calc(var(--navH) + 16px + var(--safe-bottom));
 }
 
 /* Bottom nav (shared across pages that render .navBar) */
@@ -146,4 +213,146 @@ a:hover{opacity:.9}
 }
 .muted{
   opacity: .55;
+}
+
+/* BottomTabs component */
+.navLabel{
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .01em;
+}
+
+/* Home page layout, tuned to the provided mock */
+.homeHero{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(18px + var(--safe-top)) 18px calc(var(--navH) + 18px + var(--safe-bottom));
+  gap: 14px;
+}
+
+.homeTop{
+  text-align: center;
+  max-width: 420px;
+}
+
+.homeTitle{
+  font-family: "Playfair Display", ui-serif, Georgia, serif;
+  font-weight: 800;
+  font-size: 40px;
+  letter-spacing: .02em;
+  margin: 0;
+}
+
+.homeSub{
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.homeControls{
+  width: min(420px, 100%);
+  display: flex;
+  justify-content: center;
+}
+
+.homePillRow{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.75);
+  background: rgba(255,255,255,.55);
+  box-shadow: var(--shadow2);
+  backdrop-filter: blur(12px);
+}
+
+.homeDropdown{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 900;
+}
+
+.homeTime{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 900;
+  color: rgba(31,26,22,.78);
+}
+
+.homeStage{
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.homeCharacter{
+  width: min(320px, 76vw);
+  height: auto;
+  filter: drop-shadow(0 16px 24px rgba(0,0,0,.10));
+}
+
+.homeProgress{
+  width: min(360px, 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.75);
+  background: rgba(255,255,255,.55);
+  box-shadow: var(--shadow2);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 900;
+}
+
+.homeActions{
+  width: min(360px, 100%);
+  display: grid;
+  gap: 12px;
+}
+
+.btnPrimary{
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.55);
+  background: linear-gradient(180deg, rgba(222,192,150,.92), rgba(184,144,95,.92));
+  color: rgba(255,255,255,.96);
+  font-weight: 950;
+  box-shadow: 0 16px 34px rgba(0,0,0,.16);
+}
+
+.btnPrimary:active{transform: translateY(1px);}
+
+.btnSecondary{
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.75);
+  background: rgba(255,255,255,.55);
+  color: rgba(31,26,22,.86);
+  font-weight: 950;
+  box-shadow: var(--shadow2);
+}
+
+.btnSecondary:active{transform: translateY(1px);}
+
+.tinyIcon{display:inline-flex; align-items:center; justify-content:center;}
+
+/* Make sure page content does not sit under the bottom nav */
+.page{
+  padding-bottom: calc(var(--navH) + 12px + var(--safe-bottom));
 }
