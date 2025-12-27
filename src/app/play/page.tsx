@@ -367,7 +367,7 @@ export default function PlayPage() {
           flex-direction: column;
           position: relative;
           overflow: hidden;
-          padding-bottom: calc(78px + env(safe-area-inset-bottom));
+          padding-bottom: calc(var(--navH) + 14px + env(safe-area-inset-bottom));
           background:
             radial-gradient(900px 600px at 50% 0%, rgba(255, 255, 255, 0.92), rgba(248, 242, 231, 0.98)),
             radial-gradient(900px 700px at 50% 70%, rgba(255, 232, 196, 0.55), rgba(0, 0, 0, 0));

@@ -18,6 +18,7 @@
   --phoneW:430px;
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
+  --navH: 76px;
 }
 
 *{box-sizing:border-box}
@@ -152,11 +153,11 @@ a:hover{opacity:.9}
 
 /* Bottom nav (shared across pages that render .navBar) */
 .navBar{
-  position: sticky;
-  left: 0;
-  bottom: 0;
-  transform: none;
-  width: 100%;
+  position: fixed;
+  left: 50%;
+  bottom: calc(10px + var(--safe-bottom));
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 24px));
   display: flex;
   justify-content: space-around;
   gap: 10px;
@@ -230,6 +231,37 @@ a:hover{opacity:.9}
   align-items: center;
   padding: calc(18px + var(--safe-top)) 18px calc(var(--navH) + 18px + var(--safe-bottom));
   gap: 14px;
+  position: relative;
+  isolation: isolate;
+}
+
+/* extra bling (kept subtle so text stays legible) */
+.homeHero::before{
+  content: "";
+  position: absolute;
+  inset: -40px;
+  z-index: -2;
+  background:
+    radial-gradient(closest-side at 20% 18%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(closest-side at 80% 26%, rgba(212, 175, 55, 0.20), rgba(212, 175, 55, 0) 65%),
+    radial-gradient(closest-side at 50% 92%, rgba(212, 175, 55, 0.16), rgba(212, 175, 55, 0) 70%);
+  pointer-events: none;
+}
+
+.homeHero::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.55;
+  background:
+    radial-gradient(circle at 18% 35%, rgba(255, 255, 255, 0.75) 0 1.2px, transparent 1.3px),
+    radial-gradient(circle at 62% 28%, rgba(255, 255, 255, 0.65) 0 1.1px, transparent 1.2px),
+    radial-gradient(circle at 82% 52%, rgba(255, 255, 255, 0.65) 0 1px, transparent 1.1px),
+    radial-gradient(circle at 34% 72%, rgba(255, 255, 255, 0.6) 0 1px, transparent 1.1px),
+    radial-gradient(circle at 74% 80%, rgba(255, 255, 255, 0.55) 0 1px, transparent 1.1px);
+  filter: blur(0.2px);
+  pointer-events: none;
 }
 
 .homeTop{

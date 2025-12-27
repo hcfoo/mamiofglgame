@@ -507,13 +507,16 @@ export default function CollectionPage() {
         .overlay {
           position: absolute;
           inset: 0;
-          background: rgba(0, 0, 0, 0.35);
+          background: rgba(10, 8, 6, 0.45);
+          backdrop-filter: blur(8px);
           border: none;
         }
 
         .panel {
           position: relative;
           width: min(520px, 100%);
+          background: rgba(255, 255, 255, 0.92);
+          backdrop-filter: blur(12px);
           border: 1px solid;
           border-radius: 18px;
           box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
@@ -565,6 +568,8 @@ export default function CollectionPage() {
 
         .panelBody {
           padding: 14px;
+          max-height: min(62vh, 520px);
+          overflow: auto;
         }
 
         .row {
